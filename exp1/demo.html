@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>JSP Page</title>
+  <title>Experiment 1 - Three.js Demo</title>
   <style>
     body {
       margin: 0;
@@ -20,12 +19,132 @@
   <!--h1>Hello World!</h1-->
 </body>
 
-<!-- <script src="js/three.min.js", type="module"></script> -->
-<!-- load shader files -->
-<script src="shaders/basic.vert", type="x-shader/x-vert", id="basic-vs"></script>
-<script src="shaders/basic.vert", type="x-shader/x-frag", id="basic-fs"></script>
+<script src="js/three.min.js"></script>
+
+<!-- shaders -->
+<script id="basic-vs" , type="text/glsl">
+  // passed from param
+  uniform vec3 light;
+  
+  // pass to fs
+  varying vec3 vNormal;
+  varying vec3 vLight;
+  
+  void main() {
+    // normal vector
+    vNormal = normalize(normalMatrix * normal);
+    
+    vec4 viewLight = modelViewMatrix * vec4(light, 1.0);
+    vLight = viewLight.xyz;
+    
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+</script>
+<script id="basic-fs" , type="text/glsl">
+  uniform vec3 color;
+
+  varying vec3 vNormal;
+  varying vec3 vLight;
+  
+  void main() {
+    float diffuse = dot(normalize(vLight), vNormal);
+    gl_FragColor = vec4(color * diffuse, 1.0);
+  }
+</script>
+<script id="celluoid-fs" , type="text/glsl">
+  uniform vec3 color;
+
+  varying vec3 vNormal;
+  varying vec3 vLight;
+  
+  void main() {
+    float diffuse = dot(normalize(vLight), vNormal);
+    if (diffuse < 0.2) {
+      diffuse = 0.2;
+    } else if (diffuse < 0.4) {
+      diffuse = 0.4;
+    } else if (diffuse < 0.6) {
+      diffuse = 0.6;
+    } else if (diffuse < 0.8) {
+      diffuse = 0.8;
+    } else {
+      diffuse = 1.0;
+    }
+    gl_FragColor = vec4(color * diffuse, 1.0);
+  }
+</script>
+<script id="metal-fs" , type="text/glsl">
+  uniform vec3 color;
+
+  varying vec3 vNormal;
+  varying vec3 vLight;
+  
+  void main() {
+    float diffuse = dot(normalize(vLight), vNormal);
+    if (diffuse > 0.0) {
+      gl_FragColor = vec4(color * diffuse * diffuse, 1.0);
+    } else {
+      gl_FragColor = vec4(abs(color * diffuse) * 0.5, 1.0);
+    }
+    
+  }
+</script>
+
 <!-- Three.js page rendering -->
-<script src="js/basic-scene.js"></script>
+<script id="renderer" , type="text/javascript">
+  var renderer = new THREE.WebGLRenderer();
+  renderer.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight);
 
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100);
+  camera.position.set(-1, 1, 10);
+  document.body.appendChild(renderer.domElement);
 
+  // light
+  scene.add(new THREE.AmbientLight(0x222222));
+
+  const pointLight = new THREE.PointLight(0xFFFFFF);
+  pointLight.position.x = 23;
+  pointLight.position.y = 34;
+  pointLight.position.z = 45;
+  camera.add(pointLight);
+
+  // showing axis
+  scene.add(new THREE.AxesHelper(10));
+
+  // create a material with custom shader
+  function createMaterial({ vs = "basic-vs", fs = "basic-fs" } = {}) {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        color: { type: 'v3', value: new THREE.Color(0x00dddd) },
+        light: { type: 'v3', value: pointLight.position },
+      },
+      vertexShader: document.getElementById(vs).innerHTML,
+      fragmentShader: document.getElementById(fs).innerHTML,
+      transparent: false
+    });
+  }
+
+  // a regular sphere at first
+  sphere = new THREE.Mesh(new THREE.SphereGeometry(1.5, 32, 32), createMaterial({ fs: "basic-fs" }));
+  scene.add(sphere);
+
+  // loop
+  function update() {
+    renderer.render(scene, camera);
+    requestAnimationFrame(update);
+  }
+
+  requestAnimationFrame(update);
+
+  fragShaders = ['basic-fs', 'metal-fs', 'celluoid-fs'];
+  fsid = 0;
+  // listening 'S' key
+  document.onkeypress = (event) => {
+    if (event.key == 's') {
+      sphere.material = createMaterial({ fs: fragShaders[++fsid % fragShaders.length] });
+      sphere.material.needsUpdate = true;
+    }
+  }
+</script>
 </html>
