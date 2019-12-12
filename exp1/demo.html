@@ -18,7 +18,13 @@
     }
 
     h1 {
-      text-align: center;
+      padding: 10pt;
+      /* text-align: center; */
+    }
+
+    #page-texts {
+      padding: 10pt;
+      /* text-align: center; */
     }
 
     button.inactive {
@@ -32,25 +38,31 @@
       background-color: goldenrod;
       color: white;
     }
-
-    * {
-      margin: 5px;
-    }
   </style>
 </head>
 
 <body>
   <h1>Experiment 1 Demo by <em>Xie Haotong</em></h1>
-  <div id="div-materials">
-    <button id="normal" class="active" onclick="switchMat('normal')">Normal</button>
-    <button id="metal" class="inactive" onclick="switchMat('metal')">Metal</button>
-    <button id="celluoid" class="inactive" onclick="switchMat('celluoid')">Celluiod</button>
+  <div id="page-texts">
+    <p><b>Instruction: </b></p>
+    <p>Hit the <b>'M'</b> key or click the buttons to switch bewteen materials;</p>
+    <p>Drag the mouse to control the perspective.</p>
+    </p>
+    <br>
+    <p><b>Material: &nbsp;</b>
+      <span id="span-materials">
+        <button id="normal" class="active" onclick="switchMat('normal')">Normal</button>
+        <button id="metal" class="inactive" onclick="switchMat('metal')">Metal</button>
+        <button id="celluoid" class="inactive" onclick="switchMat('celluoid')">Celluiod</button>
+      </span>
+    </p>
   </div>
+
   <div id="scene-top"></div>
 </body>
 
 <!-- THREE.js Library -->
-<script src="js/three.min.js"></script>
+<script src="js/three.js"></script>
 <script src="js/OrbitControls.js"></script>
 
 <!-- shaders -->
@@ -180,13 +192,13 @@
   var mats = ['normal', 'metal', 'celluoid'];
   var matid = 0;
   document.onkeypress = (event) => {
-    if (event.key == 's') {
+    if (event.key == 'm') {
       switchMat(mats[++matid % mats.length]);
     }
   }
   // functions to handle butttons:
   function activateMatBtn(activeid) {
-    var childs = document.getElementById('div-materials').childNodes;
+    var childs = document.getElementById('span-materials').childNodes;
     for (const c of childs) {
       if (c.nodeName == 'BUTTON' && c.className == 'active' && c.id != activeid) {
         c.className = 'inactive';
@@ -196,12 +208,12 @@
   }
   function switchMat(mat) {
     activateMatBtn(mat);
-    sphere.material = createMaterial(mat + '-fs');
-    matid = mats.find(m => { return m == mat });
+    sphere.material = createMaterial({ fs: mat + '-fs' });
+    matid = mats.findIndex(m => { return m == mat });
     sphere.material.needsUpdate = true;
   }
 
-  document.onresize = () => {
+  window.onresize = () => {
     canvasHeight = window.innerHeight - document.getElementById("scene-top").offsetTop;
     camera.aspect = window.innerWidth / canvasHeight;
     camera.updateProjectionMatrix();
