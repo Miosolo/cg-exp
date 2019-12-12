@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Experiment 1 - Three.js Demo</title>
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      max-height: 100%;
+      margin: 0;
+      background-color: black;
+      color: white;
+      overflow: hidden;
+    }
+
+    h1 {
+      padding: 10pt;
+      /* text-align: center; */
+    }
+
+    #page-texts {
+      padding: 10pt;
+      /* text-align: center; */
+    }
+
+    button.inactive {
+      background-color: black;
+      border-color: darkgray;
+      /* border: 1pt; */
+      color: darkgray;
+    }
+
+    button.active {
+      background-color: goldenrod;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Experiment 1 Demo by <em>Xie Haotong</em></h1>
+  <div id="page-texts">
+    <p><b>Instruction: </b></p>
+    <p>Hit the <b>'M'</b> key or click the buttons to switch bewteen materials;</p>
+    <p>Hit the <b>'C'</b> key or click the buttons to change the color;</p>
+    <p>Drag the mouse to control the perspective.</p>
+    </p>
+    <br>
+    <p><b>Material: &nbsp;</b>
+      <span id="span-materials">
+        <button id="normal" class="active" onclick="switchMat('normal')">Normal</button>
+        <button id="metal" class="inactive" onclick="switchMat('metal')">Metal</button>
+        <button id="celluoid" class="inactive" onclick="switchMat('celluoid')">Celluiod</button>
+      </span>
+    </p>
+  </div>
+
+  <div id="scene-top"></div>
+</body>
+
+<!-- THREE.js Library -->
+<!-- <script src="js/three.js"></script>
+<script src="js/OrbitControls.js"></script> -->
+
+<!-- shaders -->
+<script id="normal-vs" type="text/glsl">
+  // passed from param
+  uniform vec3 light;
+  
+  // pass to fs
+  varying vec3 vNormal;
+  varying vec3 vLight;
+  
+  void main() {
+    // normal vector
+    vNormal = normalize(normalMatrix * normal);
+    
+    vec4 viewLight = viewMatrix * vec4(light, 1.0);
+    vLight = viewLight.xyz;
+    
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+</script>
+<script id="normal-fs" type="text/glsl">
+  uniform vec3 color;
+
+  varying vec3 vNormal;
+  varying vec3 vLight;
+  
+  void main() {
+    float diffuse = dot(normalize(vLight), vNormal);
+    gl_FragColor = vec4(color * diffuse, 1.0);
+  }
+</script>
+<script id="celluoid-fs" type="text/glsl">
+  uniform vec3 color;
+
+  varying vec3 vNormal;
+  varying vec3 vLight;
+  
+  void main() {
+    float diffuse = dot(normalize(vLight), vNormal);
+    if (diffuse < 0.2) {
+      diffuse = 0.2;
+    } else if (diffuse < 0.4) {
+      diffuse = 0.4;
+    } else if (diffuse < 0.6) {
+      diffuse = 0.6;
+    } else if (diffuse < 0.8) {
+      diffuse = 0.8;
+    } else {
+      diffuse = 1.0;
+    }
+    gl_FragColor = vec4(color * diffuse, 1.0);
+  }
+</script>
+<script id="metal-fs" type="text/glsl">
+  uniform vec3 color;
+
+  varying vec3 vNormal;
+  varying vec3 vLight;
+  
+  void main() {
+    float diffuse = dot(normalize(vLight), vNormal);
+    if (diffuse > 0.0) {
+      gl_FragColor = vec4(color * diffuse * diffuse, 1.0);
+    } else {
+      gl_FragColor = vec4(abs(color * diffuse) * 0.5, 1.0);
+    }
+    
+  }
+</script>
+
+<!-- Three.js page rendering -->
+<script id="renderer" type="module">
+  import * as THREE from './lib/three.js/build/three.module.js';
+  import { OrbitControls } from './lib/three.js/examples/jsm/controls/OrbitControls.js';
+  import { Water } from './lib/three.js/examples/jsm/objects/Water.js'
+  import { Sky } from './lib/three.js/examples/jsm/objects/Sky.js'
+
+  var canvasHeight = window.innerHeight - document.getElementById("scene-top").offsetTop;
+  var renderer = new THREE.WebGLRenderer();
+  renderer.setSize(document.body.clientWidth, canvasHeight);
+  // renderer.setClearColor(0x000000);
+  document.body.appendChild(renderer.domElement);
+
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(75, window.innerWidth / canvasHeight, 1, 100);
+  camera.position.set(-1, 1, 10);
+
+  // light
+  // scene.add(new THREE.AmbientLight(0x222222));
+  const pointLight = new THREE.PointLight(0xFFFFFF);
+  pointLight.position.x = 23;
+  pointLight.position.y = 34;
+  pointLight.position.z = 45;
+  camera.add(pointLight);
+
+  // showing axis
+  scene.add(new THREE.AxesHelper(10));
+
+  // mousing controls
+  var controls = new OrbitControls(camera, renderer.domElement);
+  controls.update();
+
+  // ocean backgroud
+  var water = new Water(
+    new THREE.PlaneBufferGeometry(10000, 10000),
+    {
+      textureWidth: 512,
+      textureHeight: 512,
+      waterNormals: new THREE.TextureLoader().load('images/waternormals.jpg', function (texture) {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      }),
+      alpha: 1.0,
+      sunDirection: pointLight.position.clone().normalize(),
+      sunColor: 0xffffff,
+      waterColor: 0x001e0f,
+      distortionScale: 3.7,
+      fog: scene.fog !== undefined
+    }
+  );
+  water.rotation.x = - Math.PI / 2;
+  scene.add(water);
+
+  //skybox
+  var sky = new Sky();
+  var uniforms_sky = sky.material.uniforms;
+  uniforms_sky['turbidity'].value = 10;
+  uniforms_sky['rayleigh'].value = 2;
+  uniforms_sky['luminance'].value = 1;
+  uniforms_sky['mieCoefficient'].value = 0.005;
+  uniforms_sky['mieDirectionalG'].value = 0.8;
+  var parameters = {
+    distance: 400,
+    inclination: 0.49,
+    azimuth: 0.205
+  };
+  var cubeCamera = new THREE.CubeCamera(0.1, 1, 512);
+  cubeCamera.renderTarget.texture.generateMipmaps = true;
+  cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipmapLinearFilter;
+  scene.background = cubeCamera.renderTarget;
+
+  (function updateSun() {
+    var theta = Math.PI * (parameters.inclination - 0.5);
+    var phi = 2 * Math.PI * (parameters.azimuth - 0.5);
+
+    pointLight.position.x = parameters.distance * Math.cos(phi);
+    pointLight.position.y = parameters.distance * Math.sin(phi) * Math.sin(theta);
+    pointLight.position.z = parameters.distance * Math.sin(phi) * Math.cos(theta);
+
+    sky.material.uniforms['sunPosition'].value = pointLight.position.copy(pointLight.position);
+    water.material.uniforms['sunDirection'].value.copy(pointLight.position).normalize();
+
+    cubeCamera.update(renderer, sky);
+  })();
+
+  // create a material with custom shader
+  function createMaterial({ vs = "normal-vs", fs = "normal-fs" } = {}) {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        color: { type: 'v3', value: new THREE.Color(0x00dddd) },
+        light: { type: 'v3', value: pointLight.position },
+      },
+      vertexShader: document.getElementById(vs).innerHTML,
+      fragmentShader: document.getElementById(fs).innerHTML,
+      transparent: false
+    });
+  }
+
+  // a regular sphere at first
+  var sphere = new THREE.Mesh(new THREE.SphereGeometry(1.5, 32, 32), createMaterial({ fs: "normal-fs" }));
+  sphere.position.y = 2;
+  scene.add(sphere);
+
+  // loop
+  function update() {
+    // var time = Date.now() * 0.01;
+    // model.position.y = Math.sin(time) * 0.25 + 5;
+    // model.rotation.y = model.rotation.z = 0.02 * time;
+    water.material.uniforms['time'].value += 0.5 / 60.0;
+    renderer.render(scene, camera);
+    // controls.update();
+    requestAnimationFrame(update);
+  }
+
+  requestAnimationFrame(update);
+
+  // listening 'S' key
+  var mats = ['normal', 'metal', 'celluoid'];
+  var matid = 0;
+  document.onkeypress = (event) => {
+    if (event.key == 'm') {
+      switchMat(mats[++matid % mats.length]);
+    }
+  }
+  // functions to handle butttons:
+  function activateMatBtn(activeid) {
+    var childs = document.getElementById('span-materials').childNodes;
+    for (const c of childs) {
+      if (c.nodeName == 'BUTTON' && c.className == 'active' && c.id != activeid) {
+        c.className = 'inactive';
+      }
+    }
+    document.getElementById(activeid).className = 'active';
+  }
+  function switchMat(mat) {
+    activateMatBtn(mat);
+    sphere.material = createMaterial({ fs: mat + '-fs' });
+    matid = mats.findIndex(m => { return m == mat });
+    sphere.material.needsUpdate = true;
+  }
+
+  window.onresize = () => {
+    canvasHeight = window.innerHeight - document.getElementById("scene-top").offsetTop;
+    camera.aspect = window.innerWidth / canvasHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, canvasHeight);
+  }
+</script>
+
+</html>
