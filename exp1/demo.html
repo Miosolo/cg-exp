@@ -12,34 +12,49 @@
     body {
       max-height: 100%;
       margin: 0;
-      background-color: #505050;
+      background-color: black;
+      color: white;
+      overflow: hidden;
     }
 
     h1 {
-      color: white;
       text-align: center;
     }
 
-    /* canvas {
-      width: 100%;
-      max-height: 100%;
-    } */
+    button.inactive {
+      background-color: black;
+      border-color: darkgray;
+      /* border: 1pt; */
+      color: darkgray;
+    }
+
+    button.active {
+      background-color: goldenrod;
+      color: white;
+    }
+
+    * {
+      margin: 5px;
+    }
   </style>
 </head>
 
 <body>
   <h1>Experiment 1 Demo by <em>Xie Haotong</em></h1>
-  <div>
-    <input type="radio" id="mat-normal" name="material" value="normal" checked>
-    <label for="mat-normal">Normal</label>
+  <div id="div-materials">
+    <button id="normal" class="active" onclick="switchMat('normal')">Normal</button>
+    <button id="metal" class="inactive" onclick="switchMat('metal')">Metal</button>
+    <button id="celluoid" class="inactive" onclick="switchMat('celluoid')">Celluiod</button>
   </div>
   <div id="scene-top"></div>
 </body>
 
+<!-- THREE.js Library -->
 <script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
 
 <!-- shaders -->
-<script id="basic-vs" type="text/glsl">
+<script id="normal-vs" type="text/glsl">
   // passed from param
   uniform vec3 light;
   
@@ -57,7 +72,7 @@
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 </script>
-<script id="basic-fs" type="text/glsl">
+<script id="normal-fs" type="text/glsl">
   uniform vec3 color;
 
   varying vec3 vNormal;
@@ -109,20 +124,19 @@
 
 <!-- Three.js page rendering -->
 <script id="renderer" type="text/javascript">
-  sceneoffset = document.getElementById("scene-top").offsetTop;
+  var canvasHeight = window.innerHeight - document.getElementById("scene-top").offsetTop;
   var renderer = new THREE.WebGLRenderer();
-  renderer.setSize(document.body.clientHeight, document.body.clientHeight - sceneoffset);
-  renderer.setClearColor(0x505050);
+  renderer.setSize(document.body.clientWidth, canvasHeight);
+  // renderer.setClearColor(0x000000);
   document.body.appendChild(renderer.domElement);
 
 
   var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100);
+  var camera = new THREE.PerspectiveCamera(75, window.innerWidth / canvasHeight, 1, 100);
   camera.position.set(-1, 1, 10);
 
   // light
-  scene.add(new THREE.AmbientLight(0x222222));
-
+  // scene.add(new THREE.AmbientLight(0x222222));
   const pointLight = new THREE.PointLight(0xFFFFFF);
   pointLight.position.x = 23;
   pointLight.position.y = 34;
@@ -132,8 +146,12 @@
   // showing axis
   scene.add(new THREE.AxesHelper(10));
 
+  // mousing controls
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.update();
+
   // create a material with custom shader
-  function createMaterial({ vs = "basic-vs", fs = "basic-fs" } = {}) {
+  function createMaterial({ vs = "normal-vs", fs = "normal-fs" } = {}) {
     return new THREE.ShaderMaterial({
       uniforms: {
         color: { type: 'v3', value: new THREE.Color(0x00dddd) },
@@ -146,31 +164,49 @@
   }
 
   // a regular sphere at first
-  sphere = new THREE.Mesh(new THREE.SphereGeometry(1.5, 32, 32), createMaterial({ fs: "basic-fs" }));
+  var sphere = new THREE.Mesh(new THREE.SphereGeometry(1.5, 32, 32), createMaterial({ fs: "normal-fs" }));
   scene.add(sphere);
 
   // loop
   function update() {
     renderer.render(scene, camera);
+    controls.update();
     requestAnimationFrame(update);
   }
 
   requestAnimationFrame(update);
 
-  fragShaders = ['basic-fs', 'metal-fs', 'celluoid-fs'];
-  fsid = 0;
   // listening 'S' key
+  var mats = ['normal', 'metal', 'celluoid'];
+  var matid = 0;
   document.onkeypress = (event) => {
     if (event.key == 's') {
-      sphere.material = createMaterial({ fs: fragShaders[++fsid % fragShaders.length] });
-      sphere.material.needsUpdate = true;
+      switchMat(mats[++matid % mats.length]);
     }
   }
-  // document.onresize = () => {
-  //   camera.aspect = window.innerWidth / window.innerHeight;
-  //   camera.updateProjectionMatrix();
-  //   renderer.setSize( .innerWidth, window.innerHeight );
-  // }
+  // functions to handle butttons:
+  function activateMatBtn(activeid) {
+    var childs = document.getElementById('div-materials').childNodes;
+    for (const c of childs) {
+      if (c.nodeName == 'BUTTON' && c.className == 'active' && c.id != activeid) {
+        c.className = 'inactive';
+      }
+    }
+    document.getElementById(activeid).className = 'active';
+  }
+  function switchMat(mat) {
+    activateMatBtn(mat);
+    sphere.material = createMaterial(mat + '-fs');
+    matid = mats.find(m => { return m == mat });
+    sphere.material.needsUpdate = true;
+  }
+
+  document.onresize = () => {
+    canvasHeight = window.innerHeight - document.getElementById("scene-top").offsetTop;
+    camera.aspect = window.innerWidth / canvasHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, canvasHeight);
+  }
 </script>
 
 </html>
