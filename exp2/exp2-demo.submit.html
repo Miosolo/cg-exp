@@ -31,12 +31,12 @@
 
 <!-- renderer script -->
 <script type="module">
-  import * as THREE from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp2/lib/three.js/build/three.module.js';
-  import { OrbitControls } from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp2/lib/three.js/examples/jsm/controls/OrbitControls.js';
-  import { GLTFLoader } from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp2/lib/three.js/examples/jsm/loaders/GLTFLoader.js';
-  import { GUI } from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp2/lib/dat.gui.module.js';
-  import { Water } from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp2/lib/three.js/examples/jsm/objects/Water.js'
-  import { Sky } from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp2/lib/three.js/examples/jsm/objects/Sky.js';
+  import * as THREE from 'https://miosolo.github.io/hosting/cg/exp2/lib/three.js/build/three.module.js';
+  import { OrbitControls } from 'https://miosolo.github.io/hosting/cg/exp2/lib/three.js/examples/jsm/controls/OrbitControls.js';
+  import { GLTFLoader } from 'https://miosolo.github.io/hosting/cg/exp2/lib/three.js/examples/jsm/loaders/GLTFLoader.js';
+  import { GUI } from 'https://miosolo.github.io/hosting/cg/exp2/lib/dat.gui.module.js';
+  import { Water } from 'https://miosolo.github.io/hosting/cg/exp2/lib/three.js/examples/jsm/objects/Water.js'
+  import { Sky } from 'https://miosolo.github.io/hosting/cg/exp2/lib/three.js/examples/jsm/objects/Sky.js';
 
   // ------------ 0. set parameters and the stage -----------------
   const canvas = document.getElementById('stage');
@@ -191,7 +191,7 @@
     {
       textureWidth: 2048,
       textureHeight: 2048,
-      waterNormals: new THREE.TextureLoader().load('images/waternormals.jpg', function (texture) {
+      waterNormals: new THREE.TextureLoader().load('https://miosolo.github.io/hosting/cg/exp2/images/waternormals.jpg', function (texture) {
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       }),
       alpha: 1.0,
@@ -224,7 +224,7 @@
   }
 
   //load the gltf models of Stork. There are some alternatives.
-  loader.load('./models/Stork.glb', (gltf) => {
+  loader.load('https://miosolo.github.io/hosting/cg/exp2/models/Stork.glb', (gltf) => {
     const orig = gltf.scene.children[0];
     orig.castShadow = true;
     orig.receiveShadow = true;

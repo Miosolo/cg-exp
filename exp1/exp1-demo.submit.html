@@ -187,10 +187,10 @@
 
 <!-- Three.js page rendering -->
 <script id="renderer" type="module">
-  import * as THREE from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp1/lib/three.js/build/three.module.js';
-  import { OrbitControls } from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp1/lib/three.js/examples/jsm/controls/OrbitControls.js';
-  import { Water } from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp1/lib/three.js/examples/jsm/objects/Water.js'
-  import { Sky } from 'https://raw.githubusercontent.com/Miosolo/miosolo.github.io/master/hosting/cg/exp1/lib/three.js/examples/jsm/objects/Sky.js'
+  import * as THREE from 'https://miosolo.github.io/hosting/cg/exp1/lib/three.js/build/three.module.js';
+  import { OrbitControls } from 'https://miosolo.github.io/hosting/cg/exp1/lib/three.js/examples/jsm/controls/OrbitControls.js';
+  import { Water } from 'https://miosolo.github.io/hosting/cg/exp1/lib/three.js/examples/jsm/objects/Water.js'
+  import { Sky } from 'https://miosolo.github.io/hosting/cg/exp1/lib/three.js/examples/jsm/objects/Sky.js'
 
   var canvasHeight = window.innerHeight - document.getElementById("scene-top").offsetTop;
   var renderer = new THREE.WebGLRenderer();
@@ -226,7 +226,7 @@
     {
       textureWidth: 512,
       textureHeight: 512,
-      waterNormals: new THREE.TextureLoader().load('images/waternormals.jpg', function (texture) {
+      waterNormals: new THREE.TextureLoader().load('https://miosolo.github.io/hosting/cg/exp1/images/waternormals.jpg', function (texture) {
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       }),
       alpha: 1.0,
@@ -364,7 +364,7 @@
       obj.material = createMaterial({ vs: 'fourbase-vs', fs: 'ripper-fs' });
     } else if (mat == 'texture') {
       obj.material = new THREE.MeshBasicMaterial({
-        map: new THREE.TextureLoader().load('./images/alphaMap.jpg')
+        map: new THREE.TextureLoader().load('https://miosolo.github.io/hosting/cg/exp1/images/alphaMap.jpg')
       })
     } else {
       obj.material = createMaterial({ vs: 'normal-vs', fs: mat + '-fs' });
