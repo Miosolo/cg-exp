@@ -53,8 +53,8 @@
     <p><b>Material: &nbsp;</b>
       <span id="span-materials">
         <button id="normal" class="active" onclick="window.switchMat('normal')">Normal/ Lambert</button>
-        <button id="metal" class="inactive" onclick="window.switchMat('metal')">Metal/ Phong</button>
-        <button id="celluoid" class="inactive" onclick="window.switchMat('celluoid')">Celluiod</button>
+        <button id="metal" class="inactive" onclick="window.switchMat('metal')">Metal</button>
+        <button id="celluloid" class="inactive" onclick="window.switchMat('celluloid')">Celluloid</button>
         <button id="texture" class="inactive" onclick="window.switchMat('texture')">Static Texture</button>
         <button id="dynamic" class="inactive" onclick="window.switchMat('dynamic')">Dynamic Texture</button>
       </span>
@@ -62,7 +62,7 @@
 
     <p><b>Shape: &nbsp;</b>
       <span id="span-shapes">
-        <button id="sphere" class="active" onclick="window.switchMat('spere')">Sphere</button>
+        <button id="sphere" class="active" onclick="window.switchMat('sphere')">Sphere</button>
         <button id="cube" class="inactive" onclick="window.switchMat('cube')">Cube</button>
         <button id="knot" class="inactive" onclick="window.switchMat('knot')">Knot</button>
       </span>
@@ -114,7 +114,7 @@
     gl_FragColor = vec4(color * diffuse, 1.0);
   }
 </script>
-<script id="celluoid-fs" type="x-shader/x-fragment">
+<script id="celluloid-fs" type="x-shader/x-fragment">
   uniform vec3 color;
 
   varying vec3 vNormal;
@@ -309,7 +309,7 @@
   requestAnimationFrame(update);
 
   // listening 'S' key
-  var mats = ['normal', 'metal', 'celluoid', 'texture', 'dynamic'];
+  var mats = ['normal', 'metal', 'celluloid', 'texture', 'dynamic'];
   var matid = 0;
   var shapes = ['sphere', 'cube', 'knot'];
   var shpid = 0;
