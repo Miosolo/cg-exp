@@ -71,106 +71,71 @@
   var sky, sunSphere;
 
   // Init the sky background and GUI control panel
-  (function initSky() {
-    //add sky
-    sky = new Sky();
-    sky.scale.setScalar(450000);
-    scene.add(sky);
 
-    // Add Sun Helper
-    sunSphere = new THREE.Mesh(
-      new THREE.SphereBufferGeometry(20000, 16, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
-    );
-    // sunSphere.position.y = - 700000;
-    sunSphere.visible = true;
-    scene.add(sunSphere);
+  //add sky
+  sky = new Sky();
+  sky.scale.setScalar(450000);
+  scene.add(sky);
 
-    //GUI
-    let effectController = {
-      // turbidity: 10,
-      // rayleigh: 3.5,
-      // mieCoefficient: 0.005,
-      // mieDirectionalG: 0.8,
-      // luminance: 1,
-      inclination: 0, // elevation / inclination
-      azimuth: 0.5, // Facing front,
-      // sun: true
-    };
+  // Add Sun Helper
+  sunSphere = new THREE.Mesh(
+    new THREE.SphereBufferGeometry(20000, 16, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  // sunSphere.position.y = - 700000;
+  sunSphere.visible = true;
+  scene.add(sunSphere);
 
-    let distance = 400000;
+  //GUI
+  let effectController = {
+    inclination: 0, // elevation / inclination
+    azimuth: 0.5, // Facing front,
+    // sun: true
+  };
 
-    function guiChanged() {
-      let uniforms = sky.material.uniforms;
-      // uniforms["turbidity"].value = effectController.turbidity;
-      // uniforms["rayleigh"].value = effectController.rayleigh;
-      // uniforms["mieCoefficient"].value = effectController.mieCoefficient;
-      // uniforms["mieDirectionalG"].value = effectController.mieDirectionalG;
-      // uniforms["luminance"].value = effectController.luminance;
+  let distance = 400000;
 
-      let theta = Math.PI * (effectController.inclination);
-      // let phi = 2 * Math.PI * (effectController.azimuth);
-      let phi = Math.PI * (effectController.azimuth);
-      sunSphere.position.x = distance * Math.cos(phi);
-      sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
-      sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
-      // sunSphere.visible = effectController.sun;
-      uniforms["sunPosition"].value.copy(sunSphere.position);
-      // update the dir light bind to sun
-      try {
-        // update dirlight if defined
-        dirLight.position.set(sunSphere.position.x, sunSphere.position.y, sunSphere.position.z);
-        dirLight.intensity = 1 * Math.sin(phi) + 1.5;
-        dirLight.color.setHex(0xff4e00 + Math.floor(0xb1ff * Math.sin(theta))); // a color mixer, from orange to white
-        // and update ambient light if defined
-        hemiLight.intensity = 1 * Math.sin(theta) + 0.2;
-        water.material.uniforms['sunDirection'].value.copy(sunSphere.position).normalize();
-        water.material.uniforms['sunColor'].value.copy(dirLight.color);
-      } catch { }
-      renderer.render(scene, camera);
-    }
+  function guiChanged() {
+    let uniforms = sky.material.uniforms;
 
-    let gui = new GUI();
-    // gui.add(effectController, "turbidity", 1.0, 20.0, 0.1).onChange(guiChanged);
-    // gui.add(effectController, "rayleigh", 0.0, 4, 0.001).onChange(guiChanged);
-    // gui.add(effectController, "mieCoefficient", 0.0, 0.1, 0.001).onChange(guiChanged);
-    // gui.add(effectController, "mieDirectionalG", 0.0, 1, 0.001).onChange(guiChanged);
-    // gui.add(effectController, "luminance", 0.0, 2).onChange(guiChanged);
-    gui.add(effectController, "inclination", 0, 1, 0.0001).onChange(guiChanged);
-    gui.add(effectController, "azimuth", 0, 1, 0.0001).onChange(guiChanged);
-    // gui.add(effectController, "sun").onChange(guiChanged);
-    guiChanged();
-  })();
+    let theta = Math.PI * (effectController.inclination);
+    let phi = Math.PI * (effectController.azimuth);
+    sunSphere.position.x = distance * Math.cos(phi);
+    sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
+    sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
+    let normHeight = Math.sin(phi) * Math.sin(theta);
+    // sunSphere.visible = effectController.sun;
+    uniforms["sunPosition"].value.copy(sunSphere.position);
+    // update the dir light bind to sun
+    try {
+      // update dirlight if defined
+      dirLight.position.set(sunSphere.position.x, sunSphere.position.y, sunSphere.position.z);
+      dirLight.intensity = 1 * normHeight + 1.5;
+      dirLight.color.setRGB(1, 0.78 * Math.sqrt(normHeight), Math.sqrt(normHeight)); // a color mixer, from orange to white
+      // and update ambient light if defined
+      hemiLight.intensity = 1 * normHeight + 0.2;
+      water.material.uniforms['sunDirection'].value.copy(sunSphere.position).normalize();
+      water.material.uniforms['sunColor'].value.copy(dirLight.color);
+    } catch { }
+    renderer.render(scene, camera);
+  }
+
+  let gui = new GUI();
+  let sunControl = gui.addFolder('Sun position');
+  sunControl.add(effectController, "inclination", 0, 1, 0.001).onChange(guiChanged).listen();
+  sunControl.add(effectController, "azimuth", 0, 1, 0.001).onChange(guiChanged);
+  // gui.add(effectController, "sun").onChange(guiChanged);
+  guiChanged();
+
 
   // ----------- 2. Init the lights ----------------
 
   // initialize directional light (sun)
+
   const dirLight = new THREE.DirectionalLight(0xff4e00, 1.5); // warm light
   // dirLight.color.setHSL(0.1, 1, 0.95);
   dirLight.position.set(sunSphere.position.x, sunSphere.position.y, sunSphere.position.z);
   scene.add(dirLight);
-  // dirLight.castShadow = true;
-  // dirLight.shadow.mapSize.width = 2048;
-  // dirLight.shadow.mapSize.height = 2048;
-  // const d = 350;
-  // dirLight.shadow.camera.left = -d;
-  // dirLight.shadow.camera.right = d;
-  // dirLight.shadow.camera.top = d;
-  // dirLight.shadow.camera.bottom = -d;
-  // dirLight.shadow.camera.near = 100;
-  // dirLight.shadow.camera.far = 950;
-  // dirLight.shadow.bias = -0.005;
-
-  // //add light helper if needed
-  // if (showHelpers) {
-  //   const dirLightHeper = new THREE.DirectionalLightHelper(dirLight, 10);
-  //   scene.add(dirLightHeper);
-  // }
-
-  //expect all textures and colors to be in premultiplied gamma.
-  // renderer.gammaInput = true;
-  // renderer.gammaOutput = true;
-  // renderer.shadowMap.enabled = true;
 
   //initialize hemisphere light (sky)
   const hemiLight = new THREE.HemisphereLight(0x3f90ff, 0x406d82, 0.2); // skyblue-gray color pair
@@ -178,12 +143,6 @@
   // hemiLight.groundColor.setHSL(0.095, 1, 0.5);
   hemiLight.position.set(0, 0, 0);
   scene.add(hemiLight);
-
-  //add light helper if needed
-  // if (showHelpers) {
-  //   const hemiLightHelper = new THREE.HemisphereLightHelper(hemiLight, 10);
-  //   scene.add(hemiLightHelper);
-  // }
 
   // ------------ 3. Init the ocean ----------------
   var water = new Water(
